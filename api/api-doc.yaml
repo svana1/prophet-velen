@@ -1,0 +1,135 @@
+swagger: '2.0'
+info:
+  version: "0.0.1"
+  description: API doc for Online Judge Engine
+  title: OJ Engine
+
+schemes:
+  - https
+
+basePath: /v1
+
+consumes:
+  - application/json
+
+produces:
+  - application/json
+
+paths:
+  /evaluations:
+    post:
+      description: Request a new evaluation
+      parameters:
+        - name: request
+          in: body
+          required: true
+          schema:
+            $ref: '#/definitions/EvaluationRequest'
+      responses:
+        201:
+          description: OK
+          schema:
+            $ref: '#/definitions/EvaluationResult'
+
+  /evaluations/{request_id}:
+    get:
+      description: Get the status of a evaluation
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          type: string
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/EvaluationResult'
+
+  /health:
+    get:
+      description: Health endpoint of OJ Engine
+      responses:
+        200:
+          description: OK
+          schema:
+            $ref: '#/definitions/HealthStatus'
+
+definitions:
+  EvaluationRequest:
+    type: object
+    properties:
+      request_id:
+        type: string
+        description: UUID identifying a evaluation request
+      platform:
+        $ref: '#/definitions/EvaluationPlatform'
+        description: Runtime platform for evaluation, such as Java, Python, etc
+      runtime_limit:
+        type: integer
+        format: int64
+        description: Total evaluation duration allowed for the problem
+      input_links:
+        type: array
+        items:
+          type: string
+          description: S3 link pointing to the input of evaluation
+      output_links:
+        type: array
+        items:
+          type: string
+          description: S3 link pointing to the desired result of evaluation
+      driver_link:        
+        type: string
+        description: S3 link pointing to the driver program that parses input and output files to programming language specific format
+      code:
+        type: string
+        format: byte
+        description: base64 encoded code string from user
+
+  EvaluationResult:
+    type: object
+    properties:
+      request_id:
+        type: string
+        description: UUID identifying a evaluation request
+      status:
+        $ref: '#/definitions/EvaluationState'
+        description: Status of the evaluation
+      stdout:
+        type: string
+        description: Standard out from code execution
+      stderr:
+        type: string
+        description: Standard error from code execution
+      exitcode:
+        type: string
+        description: Exit code from evaluation payload process
+      duration:
+        type: integer
+        format: int64
+        description: Total evaluation duration of the problem
+
+  EvaluationState:
+    type: string
+    enum:
+      - 'evaluating'
+      - 'success'
+      - 'fail'
+      - 'timeout'
+
+  EvaluationPlatform:
+    type: string
+    enum:
+      - 'java'
+      - 'python'
+      - 'c++'
+
+  HealthStatus:
+    type: object
+    properties:
+      db_connection:
+        type: boolean
+        description: Status to check if db connection is OK
+      version:
+        type: string
+        description: Version of current running OJ Engine
