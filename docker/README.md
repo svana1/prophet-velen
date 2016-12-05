@@ -3,6 +3,6 @@ This folder contains docker images required for evaluating code submissions. All
 
 folder | image detail
 --- | ---
-jre8u111 |
-python2 | python2.7.12
+java | jre8u111
+python | python2.7.12
 
