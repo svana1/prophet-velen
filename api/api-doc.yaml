@@ -61,18 +61,30 @@ definitions:
       request_id:
         type: string
         description: UUID identifying a evaluation request
-      input_link:
-        type: string
-        description: S3 link pointing to the input of evaluation
+      platform:
+        $ref: '#/definitions/EvaluationPlatform'
+        description: Runtime platform for evaluation, such as Java, Python, etc
+      runtime_limit:
+        type: integer
+        format: int64
+        description: Total evaluation duration allowed for the problem
+      input_links:
+        type: array
+        items:
+          type: string
+          description: S3 link pointing to the input of evaluation
       output_link:
-        type: string
-        description: S3 link pointing to the desired result of evaluation
+        type: array
+        items:
+          type: string
+          description: S3 link pointing to the desired result of evaluation
       driver_link:
         type: string
         description: S3 link pointing to the driver program that parses input and output files to programming language specific format
-      code_link:
+      code:
         type: string
-        description: S3 link pointing to the code from user
+        format: byte
+        description: base64 encoded code string from user
 
   EvaluationResult:
     type: object
@@ -82,6 +94,7 @@ definitions:
         description: UUID identifying a evaluation request
       status:
         $ref: '#/definitions/EvaluationState'
+        description: Status of the evaluation
       stdout:
         type: string
         description: Standard out from code execution
@@ -92,7 +105,9 @@ definitions:
         type: string
         description: Exit code from evaluation payload process
       duration:
-        type:
+        type: integer
+        format: int64
+        description: Total evaluation duration of the problem
 
   EvaluationState:
     type: string
@@ -101,6 +116,13 @@ definitions:
       - 'success'
       - 'fail'
       - 'timeout'
+
+  EvaluationPlatform:
+    type: string
+    enum:
+      - 'java'
+      - 'python'
+      - 'c++'
 
   HealthStatus:
     type: object
