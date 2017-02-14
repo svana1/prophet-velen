@@ -78,10 +78,9 @@ definitions:
         items:
           type: string
           description: S3 link pointing to the desired result of evaluation
-      driver_links:
-        type: array
-          type: string
-          description: S3 link pointing to the driver program that parses input and output files to programming language specific format
+      driver_link:        
+        type: string
+        description: S3 link pointing to the driver program that parses input and output files to programming language specific format
       code:
         type: string
         format: byte
