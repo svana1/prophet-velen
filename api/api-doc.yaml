@@ -93,17 +93,25 @@ definitions:
         type: string
         description: UUID identifying a evaluation request
       status:
-        $ref: '#/definitions/EvaluationState'
-        description: Status of the evaluation
+        type: array
+        items:
+          $ref: '#/definitions/EvaluationState'
+          description: Status of the evaluation
       stdout:
-        type: string
-        description: Standard out from code execution
+        type: array
+        items:
+          type: string
+          description: Standard out from code execution
       stderr:
-        type: string
-        description: Standard error from code execution
+        type: array
+        items:
+          type: string
+          description: Standard error from code execution
       exitcode:
-        type: string
-        description: Exit code from evaluation payload process
+        type: array
+        items:
+          type: string
+          description: Exit code from evaluation payload process
       duration:
         type: integer
         format: int64
