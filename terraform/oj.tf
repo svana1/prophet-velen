@@ -44,7 +44,7 @@ resource "aws_launch_configuration" "private-slave-config" {
 resource "aws_autoscaling_group" "private-slave-asg" {
   name = "private-slave-ecs"
   launch_configuration = "${aws_launch_configuration.private-slave-config.id}"
-  vpc_zone_identifier = ["${split(",", module.ecs-vpc.subnet_private_ids)}}"]
+  vpc_zone_identifier = ["${split(",", module.ecs-vpc.subnet_private_ids)}"]
   max_size = "${var.worker_pool_max_size}"
   min_size = "${var.worker_pool_min_size}"
   desired_capacity = "${var.worker_pool_desired}"

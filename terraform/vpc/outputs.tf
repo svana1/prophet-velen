@@ -11,7 +11,7 @@ output "subnet_public_ids" {
 }
 
 output "subnet_private_ids" {
-  value = "${join(",",aws_subnet.private_subnet.*.id)}"
+  value = "${join(",", aws_subnet.private_subnet.*.id)}"
 }
 
 output "route_table_private_zone_ids" {

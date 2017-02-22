@@ -31,7 +31,7 @@ variable "environment" {
 }
 
 variable "image_id" {
-  default="ami-6d1c2007"
+  default="ami-af8b30cf"
 }
 
 variable "instance_type" {
@@ -39,7 +39,7 @@ variable "instance_type" {
 }
 
 variable "admin_key_name" {
-  default="juarezm_admin"
+  default="online-judge-dev"
 }
 
 variable "worker_pool_max_size" {
@@ -51,5 +51,5 @@ variable "worker_pool_min_size" {
 }
 
 variable "worker_pool_desired" {
-  default = "0"
+  default = "1"
 }
