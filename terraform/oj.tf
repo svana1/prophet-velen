@@ -50,6 +50,11 @@ resource "aws_autoscaling_group" "private-slave-asg" {
   desired_capacity = "${var.worker_pool_desired}"
   health_check_type = "EC2"
   tag = {
+    key = "Name"
+    value = "${var.servicename}-${var.environment}"
+    propagate_at_launch = true
+  }
+  tag = {
     key = "environment"
     value = "${var.environment}"
     propagate_at_launch = true
