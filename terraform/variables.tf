@@ -53,3 +53,7 @@ variable "worker_pool_min_size" {
 variable "worker_pool_desired" {
   default = "1"
 }
+
+variable "elasticache_instance_type" {
+  default = "cache.t2.small"
+}

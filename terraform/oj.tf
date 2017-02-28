@@ -65,3 +65,23 @@ resource "aws_autoscaling_group" "private-slave-asg" {
     propagate_at_launch = true
   }
 }
+
+resource "aws_elasticache_subnet_group" "oj-redis-subnet" {
+  name = "oj-redis-subnet"
+  subnet_ids = ["${split(",", module.ecs-vpc.subnet_private_ids)}}"]
+}
+
+resource "aws_elasticache_cluster" "redis-cluster" {
+  cluster_id = "online-judge-redis"
+  engine = "redis"
+  engine_version = "3.2.4"
+  node_type = "${var.elasticache_instance_type}"
+  num_cache_nodes = 1
+  parameter_group_name = "default.redis3.2"
+  port = 6379
+  subnet_group_name = "${aws_elasticache_subnet_group.oj-redis-subnet.name}"
+  security_group_ids = ["${aws_security_group.ecs_communication.id}"]
+  tags {
+    Name = "oj-redis-elasticache"
+  }
+}
