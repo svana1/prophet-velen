@@ -16,7 +16,7 @@ produces:
   - application/json
 
 paths:
-  /evaluations:
+  /eval:
     post:
       description: Request a new evaluation
       parameters:
@@ -31,7 +31,7 @@ paths:
           schema:
             $ref: '#/definitions/EvaluationResult'
 
-  /evaluations/{request_id}:
+  /eval/{request_id}:
     get:
       description: Get the status of a evaluation
       parameters:
@@ -58,38 +58,44 @@ definitions:
   EvaluationRequest:
     type: object
     properties:
-      request_id:
+      id:
         type: string
         description: UUID identifying a evaluation request
       platform:
         $ref: '#/definitions/EvaluationPlatform'
         description: Runtime platform for evaluation, such as Java, Python, etc
-      runtime_limit:
+      runtime:
         type: integer
         format: int64
         description: Total evaluation duration allowed for the problem
-      input_links:
+      s3_base:
+        type: string
+        description: Base of S3 buckets
+      inputs:
         type: array
         items:
           type: string
           description: S3 link pointing to the input of evaluation
-      output_links:
+      outputs:
         type: array
         items:
           type: string
           description: S3 link pointing to the desired result of evaluation
-      driver_link:        
+      driver:
         type: string
         description: S3 link pointing to the driver program that parses input and output files to programming language specific format
       code:
         type: string
         format: byte
         description: base64 encoded code string from user
+      callback:
+        type: string
+        description: Callback to caller
 
   EvaluationResult:
     type: object
     properties:
-      request_id:
+      id:
         type: string
         description: UUID identifying a evaluation request
       status:
@@ -112,8 +118,8 @@ definitions:
   EvaluationState:
     type: string
     enum:
-      - 'evaluating'
-      - 'success'
+      - 'pending'
+      - 'pass'
       - 'fail'
       - 'timeout'
 
@@ -127,9 +133,9 @@ definitions:
   HealthStatus:
     type: object
     properties:
-      db_connection:
-        type: boolean
-        description: Status to check if db connection is OK
+      redis:
+        type: String
+        description: Status of redis database
       version:
         type: string
         description: Version of current running OJ Engine
