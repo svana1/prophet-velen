@@ -1,10 +1,18 @@
+import base64
 import boto3
 import json
+import logging
 import os
 import requests
 import shlex
 import subprocess
+import tempfile
 import time
+
+from botocore.exceptions import (
+    BotoCoreError,
+    ClientError
+)
 
 from retrying import (
     retry,
@@ -13,6 +21,8 @@ from retrying import (
 from threading import (
     Timer
 )
+
+logger = logging.getLogger('worker')
 
 
 class Executor(object):
@@ -28,11 +38,36 @@ class Executor(object):
     outputs = []
     result = None
     s3_base = None
-    s3_client = None
+    s3 = None
+
+    dir_path = None
 
     def __init__(self):
         self._parse_environ()
-        self.s3_client = boto3.client('s3')
+        try:
+            self.s3 = boto3.client('s3')
+            self.dir_path = tempfile.mkdtemp()
+
+            for index, filename in self.inputs:
+                self.s3.meta.client.download_file(self.s3_base, filename, '%s/input/%d.txt' % (self.dir_path, index))
+
+            for index, filename in self.outputs:
+                self.s3.meta.client.download_file(self.s3_base, filename, '%s/output/%d.txt' % (self.dir_path, index))
+
+            self.s3.meta.client.download_file(
+                self.s3_base,
+                self.driver_link,
+                '%s/%s' % (self.dir_path, os.path.basename(self.driver_link))
+            )
+        except ClientError as ce:
+            logger.error('Error loading files from S3: %s' % ce.message)
+            raise ce
+        except BotoCoreError as bce:
+            logger.error('Error connecting to aws: %s' % bce.message)
+            raise bce
+
+        with open('%s/code', 'w+') as f:
+            f.write(base64.b64decode(self.base64_code))
 
     def _parse_environ(self):
         """
@@ -52,15 +87,19 @@ class Executor(object):
         Raises:
             KeyError: if required environment variables don't exist
         """
-        env = os.environ
-        self.id = env['ID']
-        self.s3_base = env['S3_BASE']
-        self.base64_code = env['CODE']
-        self.driver_link = env['DRIVER']
-        self.runtime_limit = float(env['RUNTIME_LIMIT'])
-        self.callback_url = env['DISPATCHER_URL']
-        self.inputs = env['INPUTS'].split(',')
-        self.outputs = env['OUTPUTS'].split(',')
+        try:
+            env = os.environ
+            self.id = env['ID']
+            self.s3_base = env['S3_BASE']
+            self.base64_code = env['CODE']
+            self.driver_link = env['DRIVER']
+            self.runtime_limit = float(env['RUNTIME_LIMIT'])
+            self.callback_url = env['DISPATCHER_URL']
+            self.inputs = env['INPUTS'].split(',')
+            self.outputs = env['OUTPUTS'].split(',')
+        except KeyError as ke:
+            logger.error('Missing required environment variable: %s' % ke.message)
+            raise ke
 
     def construct(self):
         """
@@ -76,7 +115,7 @@ class Executor(object):
         Args:
             command: String type. Command to execute, such as `javac Main.java && java`
         """
-        proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        proc = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=self.dir_path)
 
         def kill_proc(p):
             p.kill()
@@ -125,8 +164,6 @@ class Executor(object):
         try:
             _http_post_with_retry(self.callback_url, result)
         except RetryError as re:
-            # - TODO add log
-            pass
+            logger.error('Maximum retried reached unable to ping back: %s' % re.message)
         except Exception as e:
-            # - TODO add log
-            pass
+            logger.error('Unknown failure case: %s' % e.message)
